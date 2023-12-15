@@ -1,5 +1,7 @@
 package com.cloudwebrtc.webrtc;
-
+import org.webrtc.voiceengine.WebRtcAudioManager;
+import org.webrtc.voiceengine.WebRtcAudioUtils;
+import org.webrtc.voiceengine.WebRtcAudioEffects;
 import static com.cloudwebrtc.webrtc.utils.MediaConstraintsUtils.parseMediaConstraints;
 
 import android.app.Activity;
@@ -176,15 +178,34 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
                   .build();
       }
     }
+    Boolean isDeviceSupportHWAec = WebRtcAudioEffects.canUseAcousticEchoCanceler();
+    Boolean isDeviceSupportHWNs = WebRtcAudioEffects.canUseNoiseSuppressor();
 
     JavaAudioDeviceModule.Builder audioDeviceModuleBuilder = JavaAudioDeviceModule.builder(context)
-            .setUseHardwareAcousticEchoCanceler(true)
-            .setUseHardwareNoiseSuppressor(true)
+            .setUseHardwareAcousticEchoCanceler(isDeviceSupportHWAec)
+            .setUseHardwareNoiseSuppressor(isDeviceSupportHWNs)
             .setSamplesReadyCallback(getUserMediaImpl.inputSamplesInterceptor);
 
     if (audioAttributes != null) {
       audioDeviceModuleBuilder.setAudioAttributes(audioAttributes);
     }
+
+    audioDeviceModule = audioDeviceModuleBuilder.createAudioDeviceModule();
+
+    if (!isDeviceSupportHWAec) {
+      WebRtcAudioUtils.setWebRtcBasedAcousticEchoCanceler(true);
+    }
+
+    if (!isDeviceSupportHWNs) {
+      // Use software AEC
+      WebRtcAudioUtils.setWebRtcBasedNoiseSuppressor(true);
+    }
+
+    // Enable OpenSL ES
+    WebRtcAudioManager.setBlacklistDeviceForOpenSLESUsage(false);
+
+    // Use software AGC
+    WebRtcAudioUtils.setWebRtcBasedAutomaticGainControl(true);
 
     audioDeviceModule = audioDeviceModuleBuilder.createAudioDeviceModule();
 
