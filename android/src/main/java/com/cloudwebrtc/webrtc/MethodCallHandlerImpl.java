@@ -202,7 +202,7 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
     }
 
     // Enable OpenSL ES
-    WebRtcAudioManager.setBlacklistDeviceForOpenSLESUsage(false);
+    WebRtcAudioManager.setBlacklistDeviceForOpenSLESUsage(true);
 
     // Use software AGC
     WebRtcAudioUtils.setWebRtcBasedAutomaticGainControl(true);
